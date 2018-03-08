@@ -1,0 +1,39 @@
+Gorgovan Alina-Valentina
+324CB
+
+Tema2-FEED
+
+Pentru a structura Feed-ul am creat clasa FeedStructure care cuprinde campurile: nume(numele feed-ului), value(valoarea curenta), nr_changes(numarul de schimbari dintre ultimul print si cel curent), past_value(valoarea precedenta de la ultimul print).
+Astfel fiecare user va avea in structura sa un Treemap<Name, FeedStructure> unde cheia este reprezentata de numele feed-ului iar valoarea va fi o structura ce contine restul informatiilor despre feed pentru user-ul curent.
+
+Pentru partea de observator si feed am folosit Observer Pattern. Interfata Subject descrie functionalitatea feed-ului si metodele ce vor fi folosite pentru observatori.
+Clasa Feed implementeaza interfata Subject si suprascrie metodele folosite de acestea. Clasa mai cuprinde o lista de observatori si un treemap<String, Double> care cuprinde toate feed-urile introduse.
+Nu am vazut utila folosirea unui factory pentru observer deoarece acesta are un singur tip si nu am gasit o varianta in care sa aiba sens folosirea acestuia.
+Un observator are tipul ObserverStructure. Clasa ObserverStructure cuprinde campurile: id, filter(filtrul observatorului si are tipul String), un Treemap<String, FeedStructure> ce cuprinde toate feed-urile actualizate pentru observatorul curent si un camp de tip Node ce reprezinta radacina arborelui filtru format.
+
+Pentru adaugarea unui observator in Feed se apeleaza metoda 'registerObserver' ce primeste ca parametru un ObserverStructure cu id-ul si filtrul setate din main. In functie daca filtrul este diferit de "nil" atunci este creat arborele filtru si pentru ambele cazuri este setat Treemap-ul cu feed-uri folosind functia setFeedTree. La sfarsit observatorul este adaugat in lista. Functia setFeedtree din ObserverStructure realizeaza adaugarea elementelor din treemap-ul din Feed in treemap-ul fiecarui observer.
+
+Pentru adaugarea unui feed se apeleaza metoda addFeed din clasa Feed care adauga o intrare in treemap-ul general si dupa apeleaza metoda notifyObservers.
+
+Metoda notifyObservers apeleaza pentru fiecare observator metoda 'update' care actualizeaza treemap-ul observatorului. Daca feed-ul nu exista este adaugat iar daca exista este modificata doar valoarea. In ambele cazuri este incrementat numarul de schimbari al feed-ului.
+
+Stergerea unui observator cu un anume id se realizeaza cu ajutorul metodei removeObserver. Metoda cauta in lista de observatorul cu id-ul specificat si il elimina.
+
+Pentru implementarea partii de operatori am ales sa folosesc Factory Pattern combinat cu Singleton Pattern. Tipurile de operatori sunt {EQ, NE, LE, LT, GE, GT} iar pentru fiecare am creat o clasa ce extinde clasa abstracta de baza BaseOp. Astfel, toate clasele EqOp, NeOp, LeOp, LtOp, GeOp, GtOp ce extind clasa BaseOp trebuie sa implementeze metoda 'applyOp'  ce primeste ca parametru un filtru de tipul FilterStructure si un feed de tipul FeedStructure.
+
+OperatorFactory poate returna toate tipurile de operatori in urma unui parametru de tipul String.
+
+Transformarea filtrului din String in arbore se realizeaza in mai multi pasi:
+
+1.Metoda 'parseFilter' din clasa Shunting Yard. Se parseaza String-ul intr-un Arraylist<String> ce poate contine {'(', ')', '||', '&&', structura unui filtru de exemplu 'eq name A'}. 
+2.Metoda 'postfix' din clasa Shunting Yard. Pe baza Arraylist-ului returnat la primul pas se aplica algoritmul Shunting Yard si se obtine expresia in forma postfixata.
+3.Metoda 'constructTree' din clasa ExpressionTree. Din forma postfixata se realizeaza arborele ce urmeaza sa fie parcurs cu ajutorul Visitor Pattern. Stringul de forma '||' devin tipuri de noduri OrNode, '&&' devine AndNode iar restul vor fi OperandNode. Metoda returneaza radacina arborelui.
+
+Pentru Visitor Pattern am implementat cele doua interfete IVisitable si IVisitor. Clasele ce reprezinta tipurile de nod: Node, OrNode, AndNode si OperandNode implementeaza clasa IVisitable iar clasa Visitor implementeaza IVisitor.
+Metoda visit(OrNode) returneaza true daca cel putin unul dintre copii este true.
+Metoda visit(AndNode) returneaza true daca ambii copii sunt true.
+Metoda visit(OperandNode) returneaza valoarea true daca feedul dat ca parametru trece de filtru. Verificarea se face in metoda getValue unde in functie de tipul operatorului se apeleaza metoda getOperator din OperatorFactory. Astfel, din instanta creata se apeleaza metoda de verificare potrivita.
+
+Pentru printarea unui observer am implementat clasa Print ce are 2 metode:print pentru observeri cu filtrul diferit de "nil" si printAll daca filtrul e nil.
+Metoda printAll parcurge Treemap-ul din observator si afiseaza fiecare feed si realizeaza actualizarile specifice.
+Metoda print instantiaza un Visitor iar pentru fiecare element din Treemap se apeleaza metoda visit in functie de tipul nodului radacina. Daca se intoarce adevarat atunci feed-ul se afiseaza si se actualizeaza.
